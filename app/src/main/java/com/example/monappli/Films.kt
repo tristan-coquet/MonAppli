@@ -1,6 +1,7 @@
 //Films.kt
 package com.example.monappli
-//A quoi resemble les box films
+
+//A quoi ressemble les box films
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,6 +14,8 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,7 +29,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 
-
 @Composable
 fun Films(
     viewModel: MainViewModel,
@@ -38,6 +40,7 @@ fun Films(
     val movies by viewModel.movies.collectAsState()
     var showSearchDialog by remember { mutableStateOf(false) }
     var hasLoaded by remember { mutableStateOf(false) }
+    var showFavOnly by remember { mutableStateOf(false) }
 
     Log.d("Films", "📺 Films composable - Nombre de films : ${movies.size}")
 
@@ -110,6 +113,23 @@ fun Films(
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Icône pour le commutateur général favoris
+                IconButton(onClick = {
+                    showFavOnly = !showFavOnly
+                    viewModel.setShowFavOnly(showFavOnly)
+                }) {
+                    Icon(
+                        imageVector = if (showFavOnly) Icons.Filled.Favorite
+                        else Icons.Outlined.FavoriteBorder,
+                        contentDescription = if (showFavOnly)
+                            "Afficher tous les films"
+                        else
+                            "Afficher seulement les favoris"
+                    )
+                }
             }
 
             LazyVerticalGrid(
@@ -122,7 +142,8 @@ fun Films(
                 items(movies) { movie ->
                     MovieCard(
                         movie = movie,
-                        onClick = { onNavigateToFilmDetail(movie) }
+                        onClick = { onNavigateToFilmDetail(movie) },
+                        onToggleFav = { viewModel.toggleFilmFav(movie) }
                     )
                 }
             }
@@ -213,7 +234,8 @@ fun SearchDialog(
 @Composable
 fun MovieCard(
     movie: TmdbMovie,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onToggleFav: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -266,8 +288,18 @@ fun MovieCard(
                         text = String.format("%.1f/10", movie.vote_average),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color(0xFF6200EE)
+                        color = Color(0xFF6200EE),
+                        modifier = Modifier.weight(1f)
                     )
+                    // Icône favori
+                    IconButton(onClick = { onToggleFav() }) {
+                        Icon(
+                            imageVector = if (movie.isFav) Icons.Filled.Favorite
+                            else Icons.Outlined.FavoriteBorder,
+                            contentDescription = if (movie.isFav)
+                                "Retirer des favoris" else "Ajouter aux favoris"
+                        )
+                    }
                 }
             }
         }

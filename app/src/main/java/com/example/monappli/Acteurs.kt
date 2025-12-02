@@ -1,6 +1,7 @@
 //Acteurs.kt
 package com.example.monappli
-//Fichier pour Definir comment ressemblerons les box Acteurs
+//Fichier pour définir comment ressembleront les box Acteurs
+
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,6 +14,8 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,6 +40,7 @@ fun Acteurs(
     val acteurs by viewModel.acteurs.collectAsState()
     var showSearchDialog by remember { mutableStateOf(false) }
     var hasLoaded by remember { mutableStateOf(false) }
+    var showFavOnly by remember { mutableStateOf(false) }
 
     Log.d("Acteurs", "🎭 Acteurs composable - Nombre : ${acteurs.size}")
 
@@ -109,6 +113,23 @@ fun Acteurs(
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Icône pour le commutateur général favoris
+                IconButton(onClick = {
+                    showFavOnly = !showFavOnly
+                    viewModel.setShowFavOnly(showFavOnly)
+                }) {
+                    Icon(
+                        imageVector = if (showFavOnly) Icons.Filled.Favorite
+                        else Icons.Outlined.FavoriteBorder,
+                        contentDescription = if (showFavOnly)
+                            "Afficher tous les acteurs"
+                        else
+                            "Afficher seulement les favoris"
+                    )
+                }
             }
 
             LazyVerticalGrid(
@@ -121,7 +142,8 @@ fun Acteurs(
                 items(acteurs) { acteur ->
                     ActeurCard(
                         acteur = acteur,
-                        onClick = { onNavigateToActeurDetail(acteur) }
+                        onClick = { onNavigateToActeurDetail(acteur) },
+                        onToggleFav = { viewModel.toggleActeurFav(acteur) }
                     )
                 }
             }
@@ -142,7 +164,8 @@ fun Acteurs(
 @Composable
 fun ActeurCard(
     acteur: TmdbActeur,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onToggleFav: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -184,6 +207,24 @@ fun ActeurCard(
                     fontSize = 14.sp,
                     color = Color(0xFF666666)
                 )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    // Icône favori
+                    IconButton(onClick = { onToggleFav() }) {
+                        Icon(
+                            imageVector = if (acteur.isFav) Icons.Filled.Favorite
+                            else Icons.Outlined.FavoriteBorder,
+                            contentDescription = if (acteur.isFav)
+                                "Retirer des favoris" else "Ajouter aux favoris"
+                        )
+                    }
+                }
             }
         }
     }

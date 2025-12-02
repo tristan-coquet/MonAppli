@@ -14,6 +14,8 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -38,6 +40,7 @@ fun Series(
     val series by viewModel.series.collectAsState()
     var showSearchDialog by remember { mutableStateOf(false) }
     var hasLoaded by remember { mutableStateOf(false) }
+    var showFavOnly by remember { mutableStateOf(false) }
 
     Log.d("Series", "📺 Series composable - Nombre : ${series.size}")
 
@@ -110,6 +113,23 @@ fun Series(
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Icône pour le commutateur général favoris
+                IconButton(onClick = {
+                    showFavOnly = !showFavOnly
+                    viewModel.setShowFavOnly(showFavOnly)
+                }) {
+                    Icon(
+                        imageVector = if (showFavOnly) Icons.Filled.Favorite
+                        else Icons.Outlined.FavoriteBorder,
+                        contentDescription = if (showFavOnly)
+                            "Afficher toutes les séries"
+                        else
+                            "Afficher seulement les favoris"
+                    )
+                }
             }
 
             LazyVerticalGrid(
@@ -122,7 +142,8 @@ fun Series(
                 items(series) { serie ->
                     SerieCard(
                         serie = serie,
-                        onClick = { onNavigateToSerieDetail(serie) }
+                        onClick = { onNavigateToSerieDetail(serie) },
+                        onToggleFav = { viewModel.toggleSerieFav(serie) }
                     )
                 }
             }
@@ -143,7 +164,8 @@ fun Series(
 @Composable
 fun SerieCard(
     serie: TmdbSerie,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onToggleFav: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -196,8 +218,18 @@ fun SerieCard(
                         text = String.format("%.1f/10", serie.vote_average),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color(0xFF6200EE)
+                        color = Color(0xFF6200EE),
+                        modifier = Modifier.weight(1f)
                     )
+                    // Icône favori
+                    IconButton(onClick = { onToggleFav() }) {
+                        Icon(
+                            imageVector = if (serie.isFav) Icons.Filled.Favorite
+                            else Icons.Outlined.FavoriteBorder,
+                            contentDescription = if (serie.isFav)
+                                "Retirer des favoris" else "Ajouter aux favoris"
+                        )
+                    }
                 }
             }
         }
